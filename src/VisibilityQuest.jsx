@@ -227,26 +227,27 @@ const btnStyle = { padding: "12px 24px", borderRadius: 8, border: "none", cursor
 
 function MiniCard({ card, onClick, selected, disabled, small }) {
   const isA = card.type === "action" || card.type === "special";
-  const vc = card.vp >= 3 ? "#D4AF37" : card.vp >= 2 ? "#7B8794" : "#A0724A";
+  const vc = card.vp >= 3 ? "#00e87b" : card.vp >= 2 ? "#6b6b6b" : "#aaa";
   return (
-    <div onClick={disabled ? undefined : onClick} style={{ width: small ? 120 : 150, minHeight: small ? 155 : 195, borderRadius: 8, padding: small ? "10px 10px 8px" : "14px 14px 10px", cursor: disabled ? "default" : onClick ? "pointer" : "default", opacity: disabled ? 0.4 : 1, background: isA ? "#1a1a1a" : "#fff", border: selected ? "3px solid #00e87b" : isA ? "2px solid rgba(255,255,255,0.1)" : "2px solid #ddd", boxShadow: selected ? "0 0 20px rgba(0,232,123,0.3)" : "0 2px 8px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", transition: "all 0.2s ease", transform: selected ? "translateY(-6px)" : "translateY(0)", position: "relative", flexShrink: 0 }}>
-      {isA && <div style={{ position: "absolute", top: 8, right: 8, width: small ? 24 : 30, height: small ? 24 : 30, borderRadius: "50%", background: vc, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: small ? 12 : 15, color: "#fff", fontWeight: 900 }}>+{card.vp}</div>}
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 8 : 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: isA ? "rgba(255,255,255,0.5)" : "#999", marginBottom: 4 }}>{card.type === "special" ? "SPECIAL" : card.type?.toUpperCase() || "ACTION"}</div>
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 13 : 16, color: isA ? "#fff" : "#1a1a1a", lineHeight: 1.2, marginBottom: 6, paddingRight: isA ? 30 : 0 }}>{card.name}</div>
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 8 : 9, color: isA ? "rgba(255,255,255,0.6)" : "#666", lineHeight: 1.4, flex: 1 }}>{card.flavor || card.effect}</div>
-      {card.effectText && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 7 : 8, color: "#00e87b", marginTop: 4, fontWeight: 600 }}>{card.effectText}</div>}
+    <div onClick={disabled ? undefined : onClick} style={{ width: small ? 120 : 150, minHeight: small ? 155 : 195, borderRadius: 8, padding: small ? "10px 10px 8px" : "14px 14px 10px", cursor: disabled ? "default" : onClick ? "pointer" : "default", opacity: disabled ? 0.4 : 1, background: "#fff", border: selected ? "2px solid #00e87b" : "1px solid #e5e5e5", boxShadow: selected ? "0 0 16px rgba(0,232,123,0.15)" : "0 1px 3px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", transition: "all 0.2s ease", transform: selected ? "translateY(-4px)" : "translateY(0)", position: "relative", flexShrink: 0 }}>
+      {isA && <div style={{ position: "absolute", top: 8, right: 8, width: small ? 22 : 26, height: small ? 22 : 26, borderRadius: "50%", background: vc, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: small ? 11 : 12, color: "#fff", fontWeight: 700 }}>+{card.vp}</div>}
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 8 : 9, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", color: "#6b6b6b", marginBottom: 4 }}>{card.type === "special" ? "SPECIAL" : card.type?.toUpperCase() || "ACTION"}</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 13 : 15, color: "#0a0a0a", lineHeight: 1.2, marginBottom: 6, paddingRight: isA ? 28 : 0, fontWeight: 600 }}>{card.name}</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 9 : 10, color: "#6b6b6b", lineHeight: 1.4, flex: 1 }}>{card.flavor || card.effect}</div>
+      {card.effectText && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 8 : 9, color: "#00e87b", marginTop: 4, fontWeight: 600 }}>{card.effectText}</div>}
     </div>
   );
 }
 
 function ChallengeCard({ card }) {
-  const bg = card.ctype === "lucky" ? "linear-gradient(135deg, #2E7D32, #1B5E20)" : card.ctype === "global" ? "linear-gradient(135deg, #B71C1C, #880E4F)" : "linear-gradient(135deg, #E65100, #BF360C)";
+  const border = card.ctype === "lucky" ? "#00e87b" : card.ctype === "global" ? "#e5e5e5" : "#e5e5e5";
+  const badge = card.ctype === "lucky" ? { bg: "#e6fff2", color: "#00a85a" } : card.ctype === "global" ? { bg: "#f5f5f5", color: "#6b6b6b" } : { bg: "#f5f5f5", color: "#6b6b6b" };
   const icon = card.ctype === "lucky" ? "★" : card.ctype === "global" ? "⚡" : "⚠";
   return (
-    <div style={{ width: 220, borderRadius: 8, padding: "18px 16px 14px", background: bg, border: "2px solid rgba(255,255,255,0.2)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>{icon} {card.ctype} challenge</div>
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>{card.name}</div>
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.85)", lineHeight: 1.5 }}>{card.effect}</div>
+    <div style={{ width: 240, borderRadius: 8, padding: "18px 16px 14px", background: "#fff", border: `1px solid ${border}`, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column" }}>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", color: badge.color, marginBottom: 6, display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ background: badge.bg, padding: "2px 8px", borderRadius: 4, fontSize: 9 }}>{icon} {card.ctype}</span></div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#0a0a0a", lineHeight: 1.2, marginBottom: 8, fontWeight: 700 }}>{card.name}</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b", lineHeight: 1.5 }}>{card.effect}</div>
     </div>
   );
 }
@@ -254,14 +255,14 @@ function ChallengeCard({ card }) {
 function PlayerStrip({ player, isActive, isCurrent, color }) {
   const c = COLORS[color] || COLORS.vision;
   return (
-    <div style={{ background: isActive ? c.gradient : isCurrent ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.7)", border: isActive ? `3px solid ${c.border}` : isCurrent ? "2px solid #00e87b" : "1px solid #ddd", borderRadius: 8, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, transition: "all 0.3s ease", boxShadow: isActive ? `0 4px 20px ${c.border}40` : "0 1px 4px rgba(0,0,0,0.05)" }}>
-      <div style={{ width: 40, height: 40, borderRadius: "50%", background: c.bg, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: 16, color: c.accent, fontWeight: 900 }}>{player.name.charAt(0)}</div>
+    <div style={{ background: isActive ? "#f5f5f5" : "#fff", border: isActive ? `2px solid ${c.border}` : isCurrent ? "2px solid #00e87b" : "1px solid #e5e5e5", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, transition: "all 0.2s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      <div style={{ width: 36, height: 36, borderRadius: "50%", background: c.light, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: 14, color: c.accent, fontWeight: 700 }}>{player.name.charAt(0)}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: isActive ? c.accent : "#333" }}>{player.name}{player.isHuman ? " (YOU)" : ""}</div>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: isActive ? c.accent : "#999", letterSpacing: 1 }}>{CLASS_DISPLAY[player.champion.cls]} | {player.hand.length} cards</div>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#0a0a0a", fontWeight: 600 }}>{player.name}{player.isHuman ? " (YOU)" : ""}</div>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#6b6b6b", letterSpacing: 0 }}>{CLASS_DISPLAY[player.champion.cls]} | {player.hand.length} cards</div>
       </div>
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 28, color: isActive ? c.accent : "#333" }}>{player.vp}</div>
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: isActive ? c.accent : "#999" }}>VP</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 24, color: "#0a0a0a", fontWeight: 700 }}>{player.vp}</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#6b6b6b" }}>VP</div>
     </div>
   );
 }
@@ -422,44 +423,44 @@ export default function VisibilityQuest() {
 
   if (screen === "title") {
     return (
-      <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #0a0a0a, #1a1a1a)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 30, fontFamily: "'Inter', sans-serif" }}>
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, letterSpacing: 4, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>AIROPS PRESENTS</div>
-          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 64, color: "#fff", margin: 0, letterSpacing: 3, lineHeight: 1 }}>VISIBILITY</h1>
-          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 64, color: "#00e87b", margin: 0, letterSpacing: 3, lineHeight: 1 }}>QUEST</h1>
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 12 }}>The Content Marketing Card Game</div>
+      <div style={{ minHeight: "100vh", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40, fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, letterSpacing: 4, color: "#6b6b6b", marginBottom: 12, fontWeight: 500 }}>AIROPS PRESENTS</div>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 64, color: "#0a0a0a", margin: 0, letterSpacing: -1, lineHeight: 1, fontWeight: 700 }}>Visibility</h1>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 64, color: "#00e87b", margin: 0, letterSpacing: -1, lineHeight: 1, fontWeight: 700 }}>Quest</h1>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#6b6b6b", marginTop: 16 }}>The Content Marketing Card Game</div>
         </div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", maxWidth: 700, marginBottom: 30 }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", maxWidth: 700, marginBottom: 32 }}>
           {ALL_CHAMPIONS.map(ch => {
             const c = COLORS[ch.cls];
             const sel = selectedChampion?.id === ch.id;
             return (
-              <div key={ch.id} onClick={() => setSelectedChampion(ch)} style={{ width: 140, padding: "14px 12px", borderRadius: 8, cursor: "pointer", background: sel ? c.gradient : "rgba(255,255,255,0.05)", border: sel ? `3px solid ${c.border}` : "2px solid rgba(255,255,255,0.1)", transition: "all 0.2s ease", transform: sel ? "translateY(-4px)" : "none", boxShadow: sel ? `0 4px 20px ${c.border}40` : "none" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: c.bg, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: 16, color: c.accent, fontWeight: 900, margin: "0 auto 8px" }}>{ch.name.charAt(0)}</div>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: sel ? c.accent : "#fff", textAlign: "center" }}>{ch.name.split(" ")[0]}</div>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 7, color: sel ? c.accent : "rgba(255,255,255,0.4)", textAlign: "center", letterSpacing: 1, marginTop: 2 }}>{CLASS_DISPLAY[ch.cls]}</div>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: sel ? c.accent : "rgba(255,255,255,0.3)", textAlign: "center", marginTop: 4 }}>{ch.power}</div>
+              <div key={ch.id} onClick={() => setSelectedChampion(ch)} style={{ width: 140, padding: "16px 12px", borderRadius: 8, cursor: "pointer", background: sel ? c.light : "#fff", border: sel ? `2px solid ${c.border}` : "1px solid #e5e5e5", transition: "all 0.2s ease", transform: sel ? "translateY(-3px)" : "none", boxShadow: sel ? `0 4px 12px rgba(0,0,0,0.08)` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: c.light, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: 14, color: c.accent, fontWeight: 700, margin: "0 auto 8px" }}>{ch.name.charAt(0)}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#0a0a0a", textAlign: "center", fontWeight: 600 }}>{ch.name.split(" ")[0]}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#6b6b6b", textAlign: "center", marginTop: 2 }}>{CLASS_DISPLAY[ch.cls]}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#6b6b6b", textAlign: "center", marginTop: 4 }}>{ch.power}</div>
               </div>
             );
           })}
         </div>
         {selectedChampion && (
-          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "16px 24px", marginBottom: 24, maxWidth: 400, textAlign: "center" }}>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#fff" }}>{selectedChampion.name}</div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>{selectedChampion.title}</div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#00e87b", marginBottom: 4 }}>{selectedChampion.power}</div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.6)" }}>{selectedChampion.powerDesc}</div>
+          <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "16px 24px", marginBottom: 24, maxWidth: 400, textAlign: "center", border: "1px solid #e5e5e5" }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#0a0a0a", fontWeight: 700 }}>{selectedChampion.name}</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b", marginBottom: 6 }}>{selectedChampion.title}</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#00e87b", marginBottom: 4, fontWeight: 600 }}>{selectedChampion.power}</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b" }}>{selectedChampion.powerDesc}</div>
           </div>
         )}
-        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-          {[{ k: "short", label: "SHORT", sub: "10 VP / ~10 min" }, { k: "normal", label: "NORMAL", sub: "20 VP / ~25 min" }, { k: "long", label: "LONG", sub: "50 VP / ~60 min" }].map(o => (
-            <div key={o.k} onClick={() => setGameLength(o.k)} style={{ padding: "10px 18px", borderRadius: 10, cursor: "pointer", background: gameLength === o.k ? "rgba(0,232,123,0.2)" : "rgba(255,255,255,0.05)", border: gameLength === o.k ? "2px solid #00e87b" : "2px solid rgba(255,255,255,0.1)", textAlign: "center", transition: "all 0.2s ease" }}>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: gameLength === o.k ? "#00e87b" : "#fff" }}>{o.label}</div>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: "rgba(255,255,255,0.4)" }}>{o.sub}</div>
+        <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+          {[{ k: "short", label: "Short", sub: "10 VP" }, { k: "normal", label: "Normal", sub: "20 VP" }, { k: "long", label: "Long", sub: "50 VP" }].map(o => (
+            <div key={o.k} onClick={() => setGameLength(o.k)} style={{ padding: "10px 20px", borderRadius: 8, cursor: "pointer", background: gameLength === o.k ? "#e6fff2" : "#fff", border: gameLength === o.k ? "1px solid #00e87b" : "1px solid #e5e5e5", textAlign: "center", transition: "all 0.2s ease" }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: gameLength === o.k ? "#0a0a0a" : "#0a0a0a", fontWeight: 600 }}>{o.label}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b" }}>{o.sub}</div>
             </div>
           ))}
         </div>
-        <button onClick={startGame} disabled={!selectedChampion} style={{ ...btnStyle, background: selectedChampion ? "#00e87b" : "#333", color: selectedChampion ? "#0a0a0a" : "#666", fontSize: 14, padding: "12px 24px" }}>START GAME</button>
+        <button onClick={startGame} disabled={!selectedChampion} style={{ ...btnStyle, background: selectedChampion ? "#00e87b" : "#e5e5e5", color: selectedChampion ? "#0a0a0a" : "#6b6b6b", fontSize: 14, padding: "12px 32px" }}>Start Game</button>
       </div>
     );
   }
@@ -475,20 +476,20 @@ export default function VisibilityQuest() {
     const w = game.winner;
     const wc = COLORS[w.champion.cls];
     return (
-      <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #0a0a0a, #1a1a1a)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 30 }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, letterSpacing: 4, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>GAME OVER</div>
-        <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 48, color: "#00e87b", margin: 0 }}>{w.name} WINS!</h1>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 8 }}>{w.vp} VP in {game.round} rounds</div>
-        <div style={{ display: "flex", gap: 12, marginTop: 30 }}>
+      <div style={{ minHeight: "100vh", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40 }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, letterSpacing: 4, color: "#6b6b6b", marginBottom: 12, fontWeight: 500 }}>GAME OVER</div>
+        <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 48, color: "#0a0a0a", margin: 0, fontWeight: 700 }}>{w.name} Wins!</h1>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: "#6b6b6b", marginTop: 8 }}>{w.vp} VP in {game.round} rounds</div>
+        <div style={{ display: "flex", gap: 12, marginTop: 32 }}>
           {game.players.sort((a, b) => b.vp - a.vp).map((p, i) => (
-            <div key={i} style={{ background: p === w ? wc.gradient : "rgba(255,255,255,0.05)", borderRadius: 8, padding: "12px 20px", textAlign: "center", border: p === w ? `2px solid ${wc.border}` : "1px solid rgba(255,255,255,0.1)" }}>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 24, color: p === w ? wc.accent : "#fff" }}>{i + 1}</div>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: p === w ? wc.accent : "#fff" }}>{p.name}</div>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: p === w ? wc.accent : "rgba(255,255,255,0.5)" }}>{p.vp} VP</div>
+            <div key={i} style={{ background: p === w ? "#e6fff2" : "#f5f5f5", borderRadius: 8, padding: "14px 24px", textAlign: "center", border: p === w ? "1px solid #00e87b" : "1px solid #e5e5e5" }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 24, color: "#0a0a0a", fontWeight: 700 }}>{i + 1}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600 }}>{p.name}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b" }}>{p.vp} VP</div>
             </div>
           ))}
         </div>
-        <button onClick={() => { setScreen("title"); setGame(null); setSelectedChampion(null); setSelectedCard(null); }} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a", marginTop: 30, fontSize: 14, padding: "12px 24px" }}>PLAY AGAIN</button>
+        <button onClick={() => { setScreen("title"); setGame(null); setSelectedChampion(null); setSelectedCard(null); }} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a", marginTop: 32, fontSize: 14, padding: "12px 32px" }}>Play Again</button>
       </div>
     );
   }
@@ -496,16 +497,16 @@ export default function VisibilityQuest() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f5f5", display: "flex", fontFamily: "'Inter', sans-serif" }}>
       {/* LEFT SIDEBAR */}
-      <div style={{ width: 260, background: "#1a1a1a", padding: "16px 14px", display: "flex", flexDirection: "column", gap: 8, overflowY: "auto" }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, color: "#00e87b", marginBottom: 4, textAlign: "center" }}>VISIBILITY QUEST</div>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: 8 }}>Round {game.round} | Target: {game.winVp} VP</div>
+      <div style={{ width: 260, background: "#fff", borderRight: "1px solid #e5e5e5", padding: "16px 14px", display: "flex", flexDirection: "column", gap: 8, overflowY: "auto" }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#0a0a0a", marginBottom: 4, textAlign: "center", fontWeight: 700 }}>Visibility Quest</div>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", textAlign: "center", marginBottom: 8 }}>Round {game.round} | Target: {game.winVp} VP</div>
         {game.players.map((p, i) => (
           <PlayerStrip key={i} player={p} isActive={game.currentPlayerIdx === i} isCurrent={p.isHuman} color={p.champion.cls} />
         ))}
         <div style={{ flex: 1 }} />
-        <div ref={logRef} style={{ maxHeight: 200, overflowY: "auto", background: "rgba(0,0,0,0.3)", borderRadius: 8, padding: 10 }}>
+        <div ref={logRef} style={{ maxHeight: 200, overflowY: "auto", background: "#f5f5f5", borderRadius: 8, padding: 10, border: "1px solid #e5e5e5" }}>
           {game.log.slice(-15).map((l, i) => (
-            <div key={i} style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: "rgba(255,255,255,0.6)", marginBottom: 3, lineHeight: 1.4 }}>{l}</div>
+            <div key={i} style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#6b6b6b", marginBottom: 3, lineHeight: 1.5 }}>{l}</div>
           ))}
         </div>
       </div>
@@ -513,34 +514,34 @@ export default function VisibilityQuest() {
       {/* MAIN AREA */}
       <div style={{ flex: 1, padding: 24, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Phase Banner */}
-        <div style={{ background: "#1a1a1a", borderRadius: 8, padding: "12px 20px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ background: "#fff", borderRadius: 8, padding: "14px 20px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #e5e5e5" }}>
           <div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 1 }}>
-              {isMyTurn ? "YOUR TURN" : `${game.players[game.currentPlayerIdx].name.toUpperCase()}'S TURN`}
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", letterSpacing: 0, fontWeight: 500 }}>
+              {isMyTurn ? "Your turn" : `${game.players[game.currentPlayerIdx].name}'s turn`}
             </div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, color: "#fff" }}>
-              {phase === PH.DRAW && "DRAW PHASE"}
-              {phase === PH.CHALLENGE && "CHALLENGE PHASE"}
-              {phase === PH.CHALLENGE_RESOLVE && "RESOLVE CHALLENGE"}
-              {phase === PH.PLAY && "ACTION PHASE"}
-              {phase === PH.CLEANUP && "END OF TURN"}
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, color: "#0a0a0a", fontWeight: 700 }}>
+              {phase === PH.DRAW && "Draw Phase"}
+              {phase === PH.CHALLENGE && "Challenge Phase"}
+              {phase === PH.CHALLENGE_RESOLVE && "Resolve Challenge"}
+              {phase === PH.PLAY && "Action Phase"}
+              {phase === PH.CLEANUP && "End of Turn"}
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {isMyTurn && phase === PH.DRAW && (
-              <button onClick={() => act(g => { doDraw(g); })} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a" }}>DRAW CARD</button>
+              <button onClick={() => act(g => { doDraw(g); })} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a" }}>Draw Card</button>
             )}
             {isMyTurn && phase === PH.CHALLENGE && (
-              <button onClick={() => act(g => { doChallenge(g); })} style={{ ...btnStyle, background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.3)" }}>DRAW CHALLENGE</button>
+              <button onClick={() => act(g => { doChallenge(g); })} style={{ ...btnStyle, background: "transparent", color: "#0a0a0a", border: "1px solid #e5e5e5" }}>Draw Challenge</button>
             )}
             {isMyTurn && phase === PH.CHALLENGE_RESOLVE && (
-              <button onClick={() => act(g => { resolveChallenge(g); })} style={{ ...btnStyle, background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.3)" }}>RESOLVE</button>
+              <button onClick={() => act(g => { resolveChallenge(g); })} style={{ ...btnStyle, background: "transparent", color: "#0a0a0a", border: "1px solid #e5e5e5" }}>Resolve</button>
             )}
             {isMyTurn && phase === PH.PLAY && (
-              <button onClick={() => act(g => skipPlay(g))} style={{ ...btnStyle, background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.3)" }}>SKIP</button>
+              <button onClick={() => act(g => skipPlay(g))} style={{ ...btnStyle, background: "transparent", color: "#6b6b6b", border: "1px solid #e5e5e5" }}>Skip</button>
             )}
             {isMyTurn && phase === PH.CLEANUP && (
-              <button onClick={() => act(g => doCleanup(g))} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a" }}>END TURN</button>
+              <button onClick={() => act(g => doCleanup(g))} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a" }}>End Turn</button>
             )}
           </div>
         </div>
@@ -554,7 +555,7 @@ export default function VisibilityQuest() {
 
         {/* Hand */}
         <div style={{ flex: 1, overflowY: "auto" }}>
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#999", letterSpacing: 1, marginBottom: 8 }}>YOUR HAND ({me.hand.length} cards)</div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b", marginBottom: 10, fontWeight: 500 }}>Your hand ({me.hand.length} cards)</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {me.hand.map((card, i) => {
               const canPlay = isMyTurn && phase === PH.PLAY && !me.effects.skipAction && (me.effects.maxPlayable === undefined || card.vp <= me.effects.maxPlayable);
@@ -569,10 +570,10 @@ export default function VisibilityQuest() {
                 />
               );
             })}
-            {me.hand.length === 0 && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#999", padding: 20 }}>No cards in hand.</div>}
+            {me.hand.length === 0 && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#6b6b6b", padding: 20 }}>No cards in hand.</div>}
           </div>
           {selectedCard !== null && isMyTurn && phase === PH.PLAY && (
-            <div style={{ marginTop: 12, fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#00e87b" }}>Click again to play this card.</div>
+            <div style={{ marginTop: 12, fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#00e87b", fontWeight: 500 }}>Click again to play this card.</div>
           )}
         </div>
       </div>
