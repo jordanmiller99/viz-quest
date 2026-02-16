@@ -223,18 +223,18 @@ function checkWin(g) { for (const p of g.players) { if (p.vp >= g.winVp) { g.win
 
 /* ══════════════════════════════════════════════ UI COMPONENTS ══════════════════════════════════════════════ */
 
-const btnStyle = { padding: "10px 20px", borderRadius: 10, border: "none", cursor: "pointer", fontFamily: "'Inconsolata', monospace", fontSize: 12, fontWeight: 600, letterSpacing: 0.5, transition: "all 0.2s ease" };
+const btnStyle = { padding: "12px 24px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600, letterSpacing: 0, transition: "all 0.2s ease" };
 
 function MiniCard({ card, onClick, selected, disabled, small }) {
   const isA = card.type === "action" || card.type === "special";
   const vc = card.vp >= 3 ? "#D4AF37" : card.vp >= 2 ? "#7B8794" : "#A0724A";
   return (
-    <div onClick={disabled ? undefined : onClick} style={{ width: small ? 120 : 150, minHeight: small ? 155 : 195, borderRadius: 12, padding: small ? "10px 10px 8px" : "14px 14px 10px", cursor: disabled ? "default" : onClick ? "pointer" : "default", opacity: disabled ? 0.4 : 1, background: isA ? "linear-gradient(145deg, #1a1a2e, #16213e)" : "#fff", border: selected ? "3px solid #4d65ff" : isA ? "2px solid rgba(255,255,255,0.1)" : "2px solid #ddd", boxShadow: selected ? "0 0 20px rgba(77,101,255,0.3)" : "0 2px 8px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", transition: "all 0.2s ease", transform: selected ? "translateY(-6px)" : "translateY(0)", position: "relative", flexShrink: 0 }}>
-      {isA && <div style={{ position: "absolute", top: 8, right: 8, width: small ? 24 : 30, height: small ? 24 : 30, borderRadius: "50%", background: vc, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Merriweather', Georgia, serif", fontSize: small ? 12 : 15, color: "#fff", fontWeight: 900 }}>+{card.vp}</div>}
-      <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: small ? 8 : 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: isA ? "rgba(255,255,255,0.5)" : "#999", marginBottom: 4 }}>{card.type === "special" ? "SPECIAL" : card.type?.toUpperCase() || "ACTION"}</div>
-      <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: small ? 13 : 16, color: isA ? "#fff" : "#1a1a2e", lineHeight: 1.2, marginBottom: 6, paddingRight: isA ? 30 : 0 }}>{card.name}</div>
-      <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: small ? 8 : 9, color: isA ? "rgba(255,255,255,0.6)" : "#666", lineHeight: 1.4, flex: 1 }}>{card.flavor || card.effect}</div>
-      {card.effectText && <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: small ? 7 : 8, color: "#4d65ff", marginTop: 4, fontWeight: 600 }}>{card.effectText}</div>}
+    <div onClick={disabled ? undefined : onClick} style={{ width: small ? 120 : 150, minHeight: small ? 155 : 195, borderRadius: 8, padding: small ? "10px 10px 8px" : "14px 14px 10px", cursor: disabled ? "default" : onClick ? "pointer" : "default", opacity: disabled ? 0.4 : 1, background: isA ? "#1a1a1a" : "#fff", border: selected ? "3px solid #00e87b" : isA ? "2px solid rgba(255,255,255,0.1)" : "2px solid #ddd", boxShadow: selected ? "0 0 20px rgba(0,232,123,0.3)" : "0 2px 8px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", transition: "all 0.2s ease", transform: selected ? "translateY(-6px)" : "translateY(0)", position: "relative", flexShrink: 0 }}>
+      {isA && <div style={{ position: "absolute", top: 8, right: 8, width: small ? 24 : 30, height: small ? 24 : 30, borderRadius: "50%", background: vc, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: small ? 12 : 15, color: "#fff", fontWeight: 900 }}>+{card.vp}</div>}
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 8 : 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: isA ? "rgba(255,255,255,0.5)" : "#999", marginBottom: 4 }}>{card.type === "special" ? "SPECIAL" : card.type?.toUpperCase() || "ACTION"}</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 13 : 16, color: isA ? "#fff" : "#1a1a1a", lineHeight: 1.2, marginBottom: 6, paddingRight: isA ? 30 : 0 }}>{card.name}</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 8 : 9, color: isA ? "rgba(255,255,255,0.6)" : "#666", lineHeight: 1.4, flex: 1 }}>{card.flavor || card.effect}</div>
+      {card.effectText && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: small ? 7 : 8, color: "#00e87b", marginTop: 4, fontWeight: 600 }}>{card.effectText}</div>}
     </div>
   );
 }
@@ -243,10 +243,10 @@ function ChallengeCard({ card }) {
   const bg = card.ctype === "lucky" ? "linear-gradient(135deg, #2E7D32, #1B5E20)" : card.ctype === "global" ? "linear-gradient(135deg, #B71C1C, #880E4F)" : "linear-gradient(135deg, #E65100, #BF360C)";
   const icon = card.ctype === "lucky" ? "★" : card.ctype === "global" ? "⚡" : "⚠";
   return (
-    <div style={{ width: 220, borderRadius: 14, padding: "18px 16px 14px", background: bg, border: "2px solid rgba(255,255,255,0.2)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
-      <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>{icon} {card.ctype} challenge</div>
-      <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 20, color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>{card.name}</div>
-      <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 10, color: "rgba(255,255,255,0.85)", lineHeight: 1.5 }}>{card.effect}</div>
+    <div style={{ width: 220, borderRadius: 8, padding: "18px 16px 14px", background: bg, border: "2px solid rgba(255,255,255,0.2)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>{icon} {card.ctype} challenge</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>{card.name}</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.85)", lineHeight: 1.5 }}>{card.effect}</div>
     </div>
   );
 }
@@ -254,14 +254,14 @@ function ChallengeCard({ card }) {
 function PlayerStrip({ player, isActive, isCurrent, color }) {
   const c = COLORS[color] || COLORS.vision;
   return (
-    <div style={{ background: isActive ? c.gradient : isCurrent ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.7)", border: isActive ? `3px solid ${c.border}` : isCurrent ? "2px solid #4d65ff" : "1px solid #ddd", borderRadius: 14, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, transition: "all 0.3s ease", boxShadow: isActive ? `0 4px 20px ${c.border}40` : "0 1px 4px rgba(0,0,0,0.05)" }}>
-      <div style={{ width: 40, height: 40, borderRadius: "50%", background: c.bg, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Merriweather', Georgia, serif", fontSize: 16, color: c.accent, fontWeight: 900 }}>{player.name.charAt(0)}</div>
+    <div style={{ background: isActive ? c.gradient : isCurrent ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.7)", border: isActive ? `3px solid ${c.border}` : isCurrent ? "2px solid #00e87b" : "1px solid #ddd", borderRadius: 8, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, transition: "all 0.3s ease", boxShadow: isActive ? `0 4px 20px ${c.border}40` : "0 1px 4px rgba(0,0,0,0.05)" }}>
+      <div style={{ width: 40, height: 40, borderRadius: "50%", background: c.bg, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: 16, color: c.accent, fontWeight: 900 }}>{player.name.charAt(0)}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 14, color: isActive ? c.accent : "#333" }}>{player.name}{player.isHuman ? " (YOU)" : ""}</div>
-        <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 8, color: isActive ? c.accent : "#999", letterSpacing: 1 }}>{CLASS_DISPLAY[player.champion.cls]} | {player.hand.length} cards</div>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: isActive ? c.accent : "#333" }}>{player.name}{player.isHuman ? " (YOU)" : ""}</div>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: isActive ? c.accent : "#999", letterSpacing: 1 }}>{CLASS_DISPLAY[player.champion.cls]} | {player.hand.length} cards</div>
       </div>
-      <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 28, color: isActive ? c.accent : "#333" }}>{player.vp}</div>
-      <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 8, color: isActive ? c.accent : "#999" }}>VP</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 28, color: isActive ? c.accent : "#333" }}>{player.vp}</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: isActive ? c.accent : "#999" }}>VP</div>
     </div>
   );
 }
@@ -422,44 +422,44 @@ export default function VisibilityQuest() {
 
   if (screen === "title") {
     return (
-      <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0a0a12, #141420, #1a1a2e)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 30, fontFamily: "'Inconsolata', monospace" }}>
+      <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #0a0a0a, #1a1a1a)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 30, fontFamily: "'Inter', sans-serif" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 10, letterSpacing: 4, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>AIROPS PRESENTS</div>
-          <h1 style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 64, color: "#fff", margin: 0, letterSpacing: 3, lineHeight: 1 }}>VISIBILITY</h1>
-          <h1 style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 64, color: "#4d65ff", margin: 0, letterSpacing: 3, lineHeight: 1 }}>QUEST</h1>
-          <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 12 }}>The Content Marketing Card Game</div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, letterSpacing: 4, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>AIROPS PRESENTS</div>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 64, color: "#fff", margin: 0, letterSpacing: 3, lineHeight: 1 }}>VISIBILITY</h1>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 64, color: "#00e87b", margin: 0, letterSpacing: 3, lineHeight: 1 }}>QUEST</h1>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 12 }}>The Content Marketing Card Game</div>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", maxWidth: 700, marginBottom: 30 }}>
           {ALL_CHAMPIONS.map(ch => {
             const c = COLORS[ch.cls];
             const sel = selectedChampion?.id === ch.id;
             return (
-              <div key={ch.id} onClick={() => setSelectedChampion(ch)} style={{ width: 140, padding: "14px 12px", borderRadius: 12, cursor: "pointer", background: sel ? c.gradient : "rgba(255,255,255,0.05)", border: sel ? `3px solid ${c.border}` : "2px solid rgba(255,255,255,0.1)", transition: "all 0.2s ease", transform: sel ? "translateY(-4px)" : "none", boxShadow: sel ? `0 4px 20px ${c.border}40` : "none" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: c.bg, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Merriweather', Georgia, serif", fontSize: 16, color: c.accent, fontWeight: 900, margin: "0 auto 8px" }}>{ch.name.charAt(0)}</div>
-                <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 13, color: sel ? c.accent : "#fff", textAlign: "center" }}>{ch.name.split(" ")[0]}</div>
-                <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 7, color: sel ? c.accent : "rgba(255,255,255,0.4)", textAlign: "center", letterSpacing: 1, marginTop: 2 }}>{CLASS_DISPLAY[ch.cls]}</div>
-                <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 8, color: sel ? c.accent : "rgba(255,255,255,0.3)", textAlign: "center", marginTop: 4 }}>{ch.power}</div>
+              <div key={ch.id} onClick={() => setSelectedChampion(ch)} style={{ width: 140, padding: "14px 12px", borderRadius: 8, cursor: "pointer", background: sel ? c.gradient : "rgba(255,255,255,0.05)", border: sel ? `3px solid ${c.border}` : "2px solid rgba(255,255,255,0.1)", transition: "all 0.2s ease", transform: sel ? "translateY(-4px)" : "none", boxShadow: sel ? `0 4px 20px ${c.border}40` : "none" }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: c.bg, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: 16, color: c.accent, fontWeight: 900, margin: "0 auto 8px" }}>{ch.name.charAt(0)}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: sel ? c.accent : "#fff", textAlign: "center" }}>{ch.name.split(" ")[0]}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 7, color: sel ? c.accent : "rgba(255,255,255,0.4)", textAlign: "center", letterSpacing: 1, marginTop: 2 }}>{CLASS_DISPLAY[ch.cls]}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: sel ? c.accent : "rgba(255,255,255,0.3)", textAlign: "center", marginTop: 4 }}>{ch.power}</div>
               </div>
             );
           })}
         </div>
         {selectedChampion && (
-          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "16px 24px", marginBottom: 24, maxWidth: 400, textAlign: "center" }}>
-            <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 18, color: "#fff" }}>{selectedChampion.name}</div>
-            <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 9, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>{selectedChampion.title}</div>
-            <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 10, color: "#4d65ff", marginBottom: 4 }}>{selectedChampion.power}</div>
-            <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 9, color: "rgba(255,255,255,0.6)" }}>{selectedChampion.powerDesc}</div>
+          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "16px 24px", marginBottom: 24, maxWidth: 400, textAlign: "center" }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#fff" }}>{selectedChampion.name}</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>{selectedChampion.title}</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#00e87b", marginBottom: 4 }}>{selectedChampion.power}</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.6)" }}>{selectedChampion.powerDesc}</div>
           </div>
         )}
         <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
           {[{ k: "short", label: "SHORT", sub: "10 VP / ~10 min" }, { k: "normal", label: "NORMAL", sub: "20 VP / ~25 min" }, { k: "long", label: "LONG", sub: "50 VP / ~60 min" }].map(o => (
-            <div key={o.k} onClick={() => setGameLength(o.k)} style={{ padding: "10px 18px", borderRadius: 10, cursor: "pointer", background: gameLength === o.k ? "rgba(77,101,255,0.2)" : "rgba(255,255,255,0.05)", border: gameLength === o.k ? "2px solid #4d65ff" : "2px solid rgba(255,255,255,0.1)", textAlign: "center", transition: "all 0.2s ease" }}>
-              <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 14, color: gameLength === o.k ? "#4d65ff" : "#fff" }}>{o.label}</div>
-              <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 8, color: "rgba(255,255,255,0.4)" }}>{o.sub}</div>
+            <div key={o.k} onClick={() => setGameLength(o.k)} style={{ padding: "10px 18px", borderRadius: 10, cursor: "pointer", background: gameLength === o.k ? "rgba(0,232,123,0.2)" : "rgba(255,255,255,0.05)", border: gameLength === o.k ? "2px solid #00e87b" : "2px solid rgba(255,255,255,0.1)", textAlign: "center", transition: "all 0.2s ease" }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: gameLength === o.k ? "#00e87b" : "#fff" }}>{o.label}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: "rgba(255,255,255,0.4)" }}>{o.sub}</div>
             </div>
           ))}
         </div>
-        <button onClick={startGame} disabled={!selectedChampion} style={{ ...btnStyle, background: selectedChampion ? "linear-gradient(135deg, #4d65ff, #3a4fcc)" : "#333", color: selectedChampion ? "#fff" : "#666", fontSize: 14, padding: "14px 40px" }}>START GAME</button>
+        <button onClick={startGame} disabled={!selectedChampion} style={{ ...btnStyle, background: selectedChampion ? "#00e87b" : "#333", color: selectedChampion ? "#0a0a0a" : "#666", fontSize: 14, padding: "12px 24px" }}>START GAME</button>
       </div>
     );
   }
@@ -475,37 +475,37 @@ export default function VisibilityQuest() {
     const w = game.winner;
     const wc = COLORS[w.champion.cls];
     return (
-      <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0a0a12, #141420)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 30 }}>
-        <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 10, letterSpacing: 4, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>GAME OVER</div>
-        <h1 style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 48, color: "#4d65ff", margin: 0 }}>{w.name} WINS!</h1>
-        <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 8 }}>{w.vp} VP in {game.round} rounds</div>
+      <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #0a0a0a, #1a1a1a)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 30 }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, letterSpacing: 4, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>GAME OVER</div>
+        <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 48, color: "#00e87b", margin: 0 }}>{w.name} WINS!</h1>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 8 }}>{w.vp} VP in {game.round} rounds</div>
         <div style={{ display: "flex", gap: 12, marginTop: 30 }}>
           {game.players.sort((a, b) => b.vp - a.vp).map((p, i) => (
-            <div key={i} style={{ background: p === w ? wc.gradient : "rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 20px", textAlign: "center", border: p === w ? `2px solid ${wc.border}` : "1px solid rgba(255,255,255,0.1)" }}>
-              <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 24, color: p === w ? wc.accent : "#fff" }}>{i + 1}</div>
-              <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 14, color: p === w ? wc.accent : "#fff" }}>{p.name}</div>
-              <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 10, color: p === w ? wc.accent : "rgba(255,255,255,0.5)" }}>{p.vp} VP</div>
+            <div key={i} style={{ background: p === w ? wc.gradient : "rgba(255,255,255,0.05)", borderRadius: 8, padding: "12px 20px", textAlign: "center", border: p === w ? `2px solid ${wc.border}` : "1px solid rgba(255,255,255,0.1)" }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 24, color: p === w ? wc.accent : "#fff" }}>{i + 1}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: p === w ? wc.accent : "#fff" }}>{p.name}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: p === w ? wc.accent : "rgba(255,255,255,0.5)" }}>{p.vp} VP</div>
             </div>
           ))}
         </div>
-        <button onClick={() => { setScreen("title"); setGame(null); setSelectedChampion(null); setSelectedCard(null); }} style={{ ...btnStyle, background: "linear-gradient(135deg, #4d65ff, #3a4fcc)", color: "#fff", marginTop: 30, fontSize: 14, padding: "14px 40px" }}>PLAY AGAIN</button>
+        <button onClick={() => { setScreen("title"); setGame(null); setSelectedChampion(null); setSelectedCard(null); }} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a", marginTop: 30, fontSize: 14, padding: "12px 24px" }}>PLAY AGAIN</button>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f0f0", display: "flex", fontFamily: "'Inconsolata', monospace" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f5f5", display: "flex", fontFamily: "'Inter', sans-serif" }}>
       {/* LEFT SIDEBAR */}
-      <div style={{ width: 260, background: "#1a1a2e", padding: "16px 14px", display: "flex", flexDirection: "column", gap: 8, overflowY: "auto" }}>
-        <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 20, color: "#4d65ff", marginBottom: 4, textAlign: "center" }}>VISIBILITY QUEST</div>
-        <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 9, color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: 8 }}>Round {game.round} | Target: {game.winVp} VP</div>
+      <div style={{ width: 260, background: "#1a1a1a", padding: "16px 14px", display: "flex", flexDirection: "column", gap: 8, overflowY: "auto" }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, color: "#00e87b", marginBottom: 4, textAlign: "center" }}>VISIBILITY QUEST</div>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: 8 }}>Round {game.round} | Target: {game.winVp} VP</div>
         {game.players.map((p, i) => (
           <PlayerStrip key={i} player={p} isActive={game.currentPlayerIdx === i} isCurrent={p.isHuman} color={p.champion.cls} />
         ))}
         <div style={{ flex: 1 }} />
         <div ref={logRef} style={{ maxHeight: 200, overflowY: "auto", background: "rgba(0,0,0,0.3)", borderRadius: 8, padding: 10 }}>
           {game.log.slice(-15).map((l, i) => (
-            <div key={i} style={{ fontFamily: "'Inconsolata', monospace", fontSize: 8, color: "rgba(255,255,255,0.6)", marginBottom: 3, lineHeight: 1.4 }}>{l}</div>
+            <div key={i} style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: "rgba(255,255,255,0.6)", marginBottom: 3, lineHeight: 1.4 }}>{l}</div>
           ))}
         </div>
       </div>
@@ -513,12 +513,12 @@ export default function VisibilityQuest() {
       {/* MAIN AREA */}
       <div style={{ flex: 1, padding: 24, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Phase Banner */}
-        <div style={{ background: "#1a1a2e", borderRadius: 12, padding: "12px 20px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ background: "#1a1a1a", borderRadius: 8, padding: "12px 20px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 1 }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 1 }}>
               {isMyTurn ? "YOUR TURN" : `${game.players[game.currentPlayerIdx].name.toUpperCase()}'S TURN`}
             </div>
-            <div style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: 22, color: "#fff" }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, color: "#fff" }}>
               {phase === PH.DRAW && "DRAW PHASE"}
               {phase === PH.CHALLENGE && "CHALLENGE PHASE"}
               {phase === PH.CHALLENGE_RESOLVE && "RESOLVE CHALLENGE"}
@@ -528,19 +528,19 @@ export default function VisibilityQuest() {
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {isMyTurn && phase === PH.DRAW && (
-              <button onClick={() => act(g => { doDraw(g); })} style={{ ...btnStyle, background: "linear-gradient(135deg, #4d65ff, #3a4fcc)", color: "#fff" }}>DRAW CARD</button>
+              <button onClick={() => act(g => { doDraw(g); })} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a" }}>DRAW CARD</button>
             )}
             {isMyTurn && phase === PH.CHALLENGE && (
-              <button onClick={() => act(g => { doChallenge(g); })} style={{ ...btnStyle, background: "linear-gradient(135deg, #E65100, #BF360C)", color: "#fff" }}>DRAW CHALLENGE</button>
+              <button onClick={() => act(g => { doChallenge(g); })} style={{ ...btnStyle, background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.3)" }}>DRAW CHALLENGE</button>
             )}
             {isMyTurn && phase === PH.CHALLENGE_RESOLVE && (
-              <button onClick={() => act(g => { resolveChallenge(g); })} style={{ ...btnStyle, background: "linear-gradient(135deg, #E65100, #BF360C)", color: "#fff" }}>RESOLVE</button>
+              <button onClick={() => act(g => { resolveChallenge(g); })} style={{ ...btnStyle, background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.3)" }}>RESOLVE</button>
             )}
             {isMyTurn && phase === PH.PLAY && (
-              <button onClick={() => act(g => skipPlay(g))} style={{ ...btnStyle, background: "rgba(255,255,255,0.1)", color: "#fff" }}>SKIP</button>
+              <button onClick={() => act(g => skipPlay(g))} style={{ ...btnStyle, background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.3)" }}>SKIP</button>
             )}
             {isMyTurn && phase === PH.CLEANUP && (
-              <button onClick={() => act(g => doCleanup(g))} style={{ ...btnStyle, background: "linear-gradient(135deg, #4d65ff, #3a4fcc)", color: "#fff" }}>END TURN</button>
+              <button onClick={() => act(g => doCleanup(g))} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a" }}>END TURN</button>
             )}
           </div>
         </div>
@@ -554,7 +554,7 @@ export default function VisibilityQuest() {
 
         {/* Hand */}
         <div style={{ flex: 1, overflowY: "auto" }}>
-          <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 10, color: "#999", letterSpacing: 1, marginBottom: 8 }}>YOUR HAND ({me.hand.length} cards)</div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#999", letterSpacing: 1, marginBottom: 8 }}>YOUR HAND ({me.hand.length} cards)</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {me.hand.map((card, i) => {
               const canPlay = isMyTurn && phase === PH.PLAY && !me.effects.skipAction && (me.effects.maxPlayable === undefined || card.vp <= me.effects.maxPlayable);
@@ -569,10 +569,10 @@ export default function VisibilityQuest() {
                 />
               );
             })}
-            {me.hand.length === 0 && <div style={{ fontFamily: "'Inconsolata', monospace", fontSize: 11, color: "#999", padding: 20 }}>No cards in hand.</div>}
+            {me.hand.length === 0 && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#999", padding: 20 }}>No cards in hand.</div>}
           </div>
           {selectedCard !== null && isMyTurn && phase === PH.PLAY && (
-            <div style={{ marginTop: 12, fontFamily: "'Inconsolata', monospace", fontSize: 10, color: "#4d65ff" }}>Click again to play this card.</div>
+            <div style={{ marginTop: 12, fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#00e87b" }}>Click again to play this card.</div>
           )}
         </div>
       </div>
