@@ -275,6 +275,7 @@ export default function VisibilityQuest() {
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedChampion, setSelectedChampion] = useState(null);
   const [gameLength, setGameLength] = useState("normal");
+  const [showRules, setShowRules] = useState(false);
   const logRef = useRef(null);
 
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [game?.log]);
@@ -430,6 +431,19 @@ export default function VisibilityQuest() {
           <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 64, color: "#00e87b", margin: 0, letterSpacing: -1, lineHeight: 1, fontWeight: 700 }}>Quest</h1>
           <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#6b6b6b", marginTop: 16 }}>The Content Marketing Card Game</div>
         </div>
+        <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "24px 32px", marginBottom: 40, maxWidth: 600, width: "100%", border: "1px solid #e5e5e5" }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: "#0a0a0a", fontWeight: 700, marginBottom: 12 }}>How to Play</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px", fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b", lineHeight: 1.6 }}>
+            <div><span style={{ color: "#00e87b", fontWeight: 700 }}>1.</span> Pick a champion with a unique power</div>
+            <div><span style={{ color: "#00e87b", fontWeight: 700 }}>2.</span> Each turn: draw a card, face a challenge, then play an action</div>
+            <div><span style={{ color: "#00e87b", fontWeight: 700 }}>3.</span> Action cards earn VP. Higher value cards earn more</div>
+            <div><span style={{ color: "#00e87b", fontWeight: 700 }}>4.</span> First player to hit the VP target wins!</div>
+          </div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e5e5" }}>
+            <span style={{ fontWeight: 600, color: "#0a0a0a" }}>Tip:</span> Special cards have bonus effects. Challenge cards can help or hurt. Use your champion's power at the right moment.
+          </div>
+        </div>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600, marginBottom: 12 }}>Choose your champion</div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", maxWidth: 700, marginBottom: 32 }}>
           {ALL_CHAMPIONS.map(ch => {
             const c = COLORS[ch.cls];
@@ -495,10 +509,44 @@ export default function VisibilityQuest() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f5f5", display: "flex", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f5f5", display: "flex", fontFamily: "'Inter', sans-serif", position: "relative" }}>
+      {/* RULES PANEL */}
+      {showRules && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.3)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowRules(false)}>
+          <div style={{ background: "#fff", borderRadius: 8, padding: "32px", maxWidth: 480, width: "90%", maxHeight: "80vh", overflowY: "auto", border: "1px solid #e5e5e5", boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#0a0a0a" }}>How to Play</div>
+              <button onClick={() => setShowRules(false)} style={{ background: "none", border: "none", fontSize: 20, color: "#6b6b6b", cursor: "pointer", padding: 4 }}>x</button>
+            </div>
+            <div style={{ fontSize: 14, color: "#6b6b6b", lineHeight: 1.8 }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 4 }}>Turn order</div>
+                <div><span style={{ color: "#00e87b", fontWeight: 700 }}>1.</span> Draw an action card from the deck</div>
+                <div><span style={{ color: "#00e87b", fontWeight: 700 }}>2.</span> Draw and resolve a challenge card</div>
+                <div><span style={{ color: "#00e87b", fontWeight: 700 }}>3.</span> Play one action card from your hand to earn VP</div>
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 4 }}>Cards</div>
+                <div>Action cards are worth <span style={{ fontWeight: 600 }}>1, 2, or 3 VP</span>. Special cards have bonus effects like drawing extra cards or stealing VP.</div>
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 4 }}>Challenges</div>
+                <div><span style={{ color: "#00e87b", fontWeight: 600 }}>Lucky</span> challenges help you. <span style={{ fontWeight: 600 }}>Personal</span> challenges hurt you. <span style={{ fontWeight: 600 }}>Global</span> challenges affect all players.</div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 4 }}>Winning</div>
+                <div>First player to reach the VP target wins. Use your champion's unique power to get an edge.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* LEFT SIDEBAR */}
       <div style={{ width: 260, background: "#fff", borderRight: "1px solid #e5e5e5", padding: "16px 14px", display: "flex", flexDirection: "column", gap: 8, overflowY: "auto" }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#0a0a0a", marginBottom: 4, textAlign: "center", fontWeight: 700 }}>Visibility Quest</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#0a0a0a", fontWeight: 700 }}>Visibility Quest</div>
+          <button onClick={() => setShowRules(!showRules)} style={{ background: "#f5f5f5", border: "1px solid #e5e5e5", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 14, color: "#6b6b6b", fontWeight: 600 }}>?</button>
+        </div>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", textAlign: "center", marginBottom: 8 }}>Round {game.round} | Target: {game.winVp} VP</div>
         {game.players.map((p, i) => (
           <PlayerStrip key={i} player={p} isActive={game.currentPlayerIdx === i} isCurrent={p.isHuman} color={p.champion.cls} />
