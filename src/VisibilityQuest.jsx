@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState } from "react";
 
 /* ══════════════════════════════════════════════
    DATA
@@ -155,6 +155,10 @@ function cloneGame(g) {
     log: [...g.log],
     currentChallenge: g.currentChallenge ? { ...g.currentChallenge } : null,
     winner: g.winner ? { ...g.winner } : null,
+    turnsUsed: g.turnsUsed,
+    turnLimit: g.turnLimit,
+    gameMode: g.gameMode,
+    soloResult: g.soloResult,
   };
 }
 
@@ -219,7 +223,17 @@ function execResolve(g, card, targetIdx) {
 }
 
 const PH = { DRAW: "draw", CHALLENGE: "challenge", CHALLENGE_RESOLVE: "challenge_resolve", PLAY: "play", CLEANUP: "cleanup", GAME_OVER: "game_over" };
-function checkWin(g) { for (const p of g.players) { if (p.vp >= g.winVp) { g.winner = p; g.phase = PH.GAME_OVER; return true; } } return false; }
+function checkWin(g) {
+  for (const p of g.players) {
+    if (p.vp >= g.winVp) {
+      g.winner = p;
+      if (g.gameMode === "solo") g.soloResult = "win";
+      g.phase = PH.GAME_OVER;
+      return true;
+    }
+  }
+  return false;
+}
 
 /* ══════════════════════════════════════════════ UI COMPONENTS ══════════════════════════════════════════════ */
 
@@ -258,7 +272,7 @@ function PlayerStrip({ player, isActive, isCurrent, color }) {
     <div style={{ background: isActive ? "#f5f5f5" : "#fff", border: isActive ? `2px solid ${c.border}` : isCurrent ? "2px solid #00e87b" : "1px solid #e5e5e5", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, transition: "all 0.2s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
       <div style={{ width: 36, height: 36, borderRadius: "50%", background: c.light, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: 14, color: c.accent, fontWeight: 700 }}>{player.name.charAt(0)}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#0a0a0a", fontWeight: 600 }}>{player.name}{player.isHuman ? " (YOU)" : ""}</div>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#0a0a0a", fontWeight: 600 }}>{player.name}{isCurrent ? " (YOU)" : ""}</div>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#6b6b6b", letterSpacing: 0 }}>{CLASS_DISPLAY[player.champion.cls]} | {player.hand.length} cards</div>
       </div>
       <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 24, color: "#0a0a0a", fontWeight: 700 }}>{player.vp}</div>
@@ -276,32 +290,51 @@ export default function VisibilityQuest() {
   const [selectedChampion, setSelectedChampion] = useState(null);
   const [gameLength, setGameLength] = useState("normal");
   const [showRules, setShowRules] = useState(false);
-  const logRef = useRef(null);
-
-  useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [game?.log]);
+  const [gameMode, setGameMode] = useState(null); // "solo" | "vs_ai" | "local"
+  const [playerCount, setPlayerCount] = useState(2); // for local mode
+  const [setupStep, setSetupStep] = useState(0); // which player is picking champion in local mode
+  const [localChampions, setLocalChampions] = useState([]); // selected champions for local mode
+  const [showPassScreen, setShowPassScreen] = useState(false); // pass-and-play interstitial
 
   const winVpMap = { short: 10, normal: 20, long: 50 };
+  const turnLimitMap = { short: 15, normal: 30, long: 60 };
 
   function startGame() {
-    if (!selectedChampion) return;
     const winVp = winVpMap[gameLength];
-    const available = ALL_CHAMPIONS.filter(c => c.id !== selectedChampion.id);
-    const opponents = shuffle(available).slice(0, 3);
     const actionDeck = buildActionDeck();
     const challengeDeck = buildChallengeDeck();
-    const players = [
-      { ...makePlayer(selectedChampion, true), hand: [] },
-      ...opponents.map(c => ({ ...makePlayer(c, false), hand: [] })),
-    ];
+    let players;
+
+    if (gameMode === "solo") {
+      if (!selectedChampion) return;
+      players = [{ ...makePlayer(selectedChampion, true), hand: [] }];
+    } else if (gameMode === "vs_ai") {
+      if (!selectedChampion) return;
+      const available = ALL_CHAMPIONS.filter(c => c.id !== selectedChampion.id);
+      const opponents = shuffle(available).slice(0, 3);
+      players = [
+        { ...makePlayer(selectedChampion, true), hand: [] },
+        ...opponents.map(c => ({ ...makePlayer(c, false), hand: [] })),
+      ];
+    } else if (gameMode === "local") {
+      if (localChampions.length !== playerCount) return;
+      players = localChampions.map(c => ({ ...makePlayer(c, true), hand: [] }));
+    } else return;
+
     players.forEach(p => { for (let i = 0; i < 4 && actionDeck.length; i++) p.hand.push(actionDeck.shift()); });
     setGame({
       players, actionDeck, challengeDeck, actionDiscard: [],
       currentPlayerIdx: 0, round: 1, phase: PH.DRAW,
-      log: ["Game started! Draw your first card."],
+      log: [gameMode === "solo" ? "Solo game started! Click the deck to draw." : "Game started! Click the deck to draw."],
       currentChallenge: null, winner: null, winVp,
+      gameMode,
+      turnsUsed: 0,
+      turnLimit: gameMode === "solo" ? turnLimitMap[gameLength] : null,
+      soloResult: null, // "win" | "lose" for solo mode
     });
     setScreen("game");
     setSelectedCard(null);
+    setShowPassScreen(false);
   }
 
   function makePlayer(champ, isHuman) {
@@ -382,11 +415,34 @@ export default function VisibilityQuest() {
   }
 
   function doCleanup(g) {
+    // Solo mode: increment turn count and check limit
+    if (g.gameMode === "solo") {
+      g.turnsUsed++;
+      if (g.turnLimit && g.turnsUsed >= g.turnLimit) {
+        g.soloResult = "lose";
+        g.winner = g.players[0]; // show player's stats
+        g.phase = PH.GAME_OVER;
+        g.log.push(`Out of turns! Final score: ${g.players[0].vp} VP.`);
+        return;
+      }
+      // Solo: stays on player 0
+      g.players.forEach(p => { p.powerUsedThisRound = false; });
+      g.round++;
+      g.phase = PH.DRAW;
+      return;
+    }
+
     let next = (g.currentPlayerIdx + 1) % g.players.length;
     if (next === 0) g.round++;
     g.currentPlayerIdx = next;
     g.players.forEach(p => { p.powerUsedThisRound = false; });
     g.phase = PH.DRAW;
+
+    if (g.gameMode === "local") {
+      // Pass-and-play: show interstitial
+      return; // caller will set showPassScreen
+    }
+
     if (!g.players[next].isHuman) runAiTurn(g);
   }
 
@@ -423,6 +479,31 @@ export default function VisibilityQuest() {
   /* ═══════════════════════════ SCREENS ═══════════════════════════ */
 
   if (screen === "title") {
+    // Determine which champion(s) are already taken in local mode
+    const takenIds = localChampions.map(c => c.id);
+    const availableForPick = gameMode === "local" ? ALL_CHAMPIONS.filter(c => !takenIds.includes(c.id)) : ALL_CHAMPIONS;
+    const isLocalSetup = gameMode === "local" && setupStep < playerCount;
+    const currentPickLabel = isLocalSetup ? `Player ${setupStep + 1}: Choose your champion` : "Choose your champion";
+
+    // Can we start?
+    const canStart = gameMode === "solo" || gameMode === "vs_ai"
+      ? !!selectedChampion
+      : gameMode === "local"
+        ? localChampions.length === playerCount
+        : false;
+
+    function handleLocalPick(ch) {
+      setSelectedChampion(ch);
+    }
+
+    function confirmLocalPick() {
+      if (!selectedChampion) return;
+      const next = [...localChampions, selectedChampion];
+      setLocalChampions(next);
+      setSelectedChampion(null);
+      setSetupStep(setupStep + 1);
+    }
+
     return (
       <div style={{ minHeight: "100vh", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40, fontFamily: "'Inter', sans-serif" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -431,78 +512,228 @@ export default function VisibilityQuest() {
           <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 64, color: "#00e87b", margin: 0, letterSpacing: -1, lineHeight: 1, fontWeight: 700 }}>Quest</h1>
           <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#6b6b6b", marginTop: 16 }}>The Content Marketing Card Game</div>
         </div>
-        <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "28px 32px", marginBottom: 40, maxWidth: 560, width: "100%", border: "1px solid #e5e5e5" }}>
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: "#0a0a0a", fontWeight: 700, marginBottom: 16 }}>How to Play</div>
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#6b6b6b", lineHeight: 1.7 }}>
-            <div style={{ marginBottom: 14 }}>You and 3 AI opponents compete to earn <span style={{ fontWeight: 600, color: "#0a0a0a" }}>Victory Points (VP)</span> by playing content marketing action cards. First to reach the target wins.</div>
-            <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 8 }}>Each turn has 3 steps:</div>
-            <div style={{ marginBottom: 6, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>1. Draw</span> — Add an action card to your hand</div>
-            <div style={{ marginBottom: 6, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>2. Challenge</span> — A random event triggers. Lucky ones help you, personal ones hurt you, and global ones affect everyone</div>
-            <div style={{ marginBottom: 14, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>3. Play</span> — Choose a card from your hand to play for VP, or skip</div>
-            <div style={{ paddingTop: 14, borderTop: "1px solid #e5e5e5" }}>Cards are worth <span style={{ fontWeight: 600, color: "#0a0a0a" }}>1, 2, or 3 VP</span>. Some special cards have bonus effects like drawing extra cards or stealing VP from opponents. Click a card once to select it, then click again to play it.</div>
-          </div>
-        </div>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600, marginBottom: 12 }}>Choose your champion</div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", maxWidth: 700, marginBottom: 32 }}>
-          {ALL_CHAMPIONS.map(ch => {
-            const c = COLORS[ch.cls];
-            const sel = selectedChampion?.id === ch.id;
-            return (
-              <div key={ch.id} onClick={() => setSelectedChampion(ch)} style={{ width: 140, padding: "16px 12px", borderRadius: 8, cursor: "pointer", background: sel ? c.light : "#fff", border: sel ? `2px solid ${c.border}` : "1px solid #e5e5e5", transition: "all 0.2s ease", transform: sel ? "translateY(-3px)" : "none", boxShadow: sel ? `0 4px 12px rgba(0,0,0,0.08)` : "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: c.light, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: 14, color: c.accent, fontWeight: 700, margin: "0 auto 8px" }}>{ch.name.charAt(0)}</div>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#0a0a0a", textAlign: "center", fontWeight: 600 }}>{ch.name.split(" ")[0]}</div>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#6b6b6b", textAlign: "center", marginTop: 2 }}>{CLASS_DISPLAY[ch.cls]}</div>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#6b6b6b", textAlign: "center", marginTop: 4 }}>{ch.power}</div>
-              </div>
-            );
-          })}
-        </div>
-        {selectedChampion && (
-          <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "16px 24px", marginBottom: 24, maxWidth: 400, textAlign: "center", border: "1px solid #e5e5e5" }}>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#0a0a0a", fontWeight: 700 }}>{selectedChampion.name}</div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b", marginBottom: 6 }}>{selectedChampion.title}</div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#00e87b", marginBottom: 4, fontWeight: 600 }}>{selectedChampion.power}</div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b" }}>{selectedChampion.powerDesc}</div>
-          </div>
-        )}
-        <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
-          {[{ k: "short", label: "Short", sub: "10 VP" }, { k: "normal", label: "Normal", sub: "20 VP" }, { k: "long", label: "Long", sub: "50 VP" }].map(o => (
-            <div key={o.k} onClick={() => setGameLength(o.k)} style={{ padding: "10px 20px", borderRadius: 8, cursor: "pointer", background: gameLength === o.k ? "#e6fff2" : "#fff", border: gameLength === o.k ? "1px solid #00e87b" : "1px solid #e5e5e5", textAlign: "center", transition: "all 0.2s ease" }}>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: gameLength === o.k ? "#0a0a0a" : "#0a0a0a", fontWeight: 600 }}>{o.label}</div>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b" }}>{o.sub}</div>
+
+        {/* Game Mode Selector */}
+        {!gameMode && (
+          <>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600, marginBottom: 16 }}>Choose a game mode</div>
+            <div style={{ display: "flex", gap: 12, marginBottom: 40, flexWrap: "wrap", justifyContent: "center" }}>
+              {[
+                { k: "solo", label: "Solo", sub: "Reach the VP target in a limited number of turns" },
+                { k: "vs_ai", label: "vs Computers", sub: "Compete against 3 AI opponents" },
+                { k: "local", label: "Pass and Play", sub: "Take turns on the same device with friends" },
+              ].map(m => (
+                <div key={m.k} onClick={() => { setGameMode(m.k); setSelectedChampion(null); setLocalChampions([]); setSetupStep(0); }} style={{ width: 180, padding: "20px 16px", borderRadius: 8, cursor: "pointer", background: "#fff", border: "1px solid #e5e5e5", textAlign: "center", transition: "all 0.2s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: "#0a0a0a", fontWeight: 700, marginBottom: 6 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", lineHeight: 1.5 }}>{m.sub}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <button onClick={startGame} disabled={!selectedChampion} style={{ ...btnStyle, background: selectedChampion ? "#00e87b" : "#e5e5e5", color: selectedChampion ? "#0a0a0a" : "#6b6b6b", fontSize: 14, padding: "12px 32px" }}>Start Game</button>
+          </>
+        )}
+
+        {/* How to Play (only show after mode is chosen) */}
+        {gameMode && (
+          <>
+            <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "28px 32px", marginBottom: 40, maxWidth: 560, width: "100%", border: "1px solid #e5e5e5" }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: "#0a0a0a", fontWeight: 700, marginBottom: 16 }}>How to Play</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#6b6b6b", lineHeight: 1.7 }}>
+                <div style={{ marginBottom: 14 }}>
+                  {gameMode === "solo" && <>Race to earn <span style={{ fontWeight: 600, color: "#0a0a0a" }}>Victory Points (VP)</span> by playing content marketing action cards before you run out of turns.</>}
+                  {gameMode === "vs_ai" && <>You and 3 AI opponents compete to earn <span style={{ fontWeight: 600, color: "#0a0a0a" }}>Victory Points (VP)</span> by playing content marketing action cards. First to reach the target wins.</>}
+                  {gameMode === "local" && <>Take turns on the same device. Compete to earn <span style={{ fontWeight: 600, color: "#0a0a0a" }}>Victory Points (VP)</span> by playing content marketing action cards. First to reach the target wins.</>}
+                </div>
+                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 8 }}>Each turn has 3 steps:</div>
+                <div style={{ marginBottom: 6, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>1. Draw</span> — Click the deck to draw an action card</div>
+                <div style={{ marginBottom: 6, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>2. Challenge</span> — Click the deck to reveal a random event</div>
+                <div style={{ marginBottom: 14, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>3. Play</span> — Click a card from your hand to select it, then click again to play it for VP</div>
+                <div style={{ paddingTop: 14, borderTop: "1px solid #e5e5e5" }}>Cards are worth <span style={{ fontWeight: 600, color: "#0a0a0a" }}>1, 2, or 3 VP</span>. Some special cards have bonus effects like drawing extra cards or stealing VP from opponents.</div>
+              </div>
+            </div>
+
+            {/* Local mode: player count selector */}
+            {gameMode === "local" && localChampions.length === 0 && setupStep === 0 && (
+              <>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600, marginBottom: 12 }}>How many players?</div>
+                <div style={{ display: "flex", gap: 10, marginBottom: 32 }}>
+                  {[2, 3, 4].map(n => (
+                    <div key={n} onClick={() => setPlayerCount(n)} style={{ padding: "10px 24px", borderRadius: 8, cursor: "pointer", background: playerCount === n ? "#e6fff2" : "#fff", border: playerCount === n ? "1px solid #00e87b" : "1px solid #e5e5e5", textAlign: "center", transition: "all 0.2s ease" }}>
+                      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#0a0a0a", fontWeight: 700 }}>{n}</div>
+                      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b" }}>players</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Champion Selection */}
+            {(gameMode !== "local" || isLocalSetup) && (
+              <>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600, marginBottom: 12 }}>{currentPickLabel}</div>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", maxWidth: 700, marginBottom: 32 }}>
+                  {availableForPick.map(ch => {
+                    const c = COLORS[ch.cls];
+                    const sel = selectedChampion?.id === ch.id;
+                    return (
+                      <div key={ch.id} onClick={() => gameMode === "local" ? handleLocalPick(ch) : setSelectedChampion(ch)} style={{ width: 140, padding: "16px 12px", borderRadius: 8, cursor: "pointer", background: sel ? c.light : "#fff", border: sel ? `2px solid ${c.border}` : "1px solid #e5e5e5", transition: "all 0.2s ease", transform: sel ? "translateY(-3px)" : "none", boxShadow: sel ? `0 4px 12px rgba(0,0,0,0.08)` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: c.light, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontSize: 14, color: c.accent, fontWeight: 700, margin: "0 auto 8px" }}>{ch.name.charAt(0)}</div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#0a0a0a", textAlign: "center", fontWeight: 600 }}>{ch.name.split(" ")[0]}</div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#6b6b6b", textAlign: "center", marginTop: 2 }}>{CLASS_DISPLAY[ch.cls]}</div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "#6b6b6b", textAlign: "center", marginTop: 4 }}>{ch.power}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Selected champion detail */}
+            {selectedChampion && (
+              <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "16px 24px", marginBottom: 24, maxWidth: 400, textAlign: "center", border: "1px solid #e5e5e5" }}>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#0a0a0a", fontWeight: 700 }}>{selectedChampion.name}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b", marginBottom: 6 }}>{selectedChampion.title}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#00e87b", marginBottom: 4, fontWeight: 600 }}>{selectedChampion.power}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b" }}>{selectedChampion.powerDesc}</div>
+              </div>
+            )}
+
+            {/* Already-picked champions in local mode */}
+            {gameMode === "local" && localChampions.length > 0 && (
+              <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", justifyContent: "center" }}>
+                {localChampions.map((ch, i) => {
+                  const c = COLORS[ch.cls];
+                  return (
+                    <div key={ch.id} style={{ background: c.light, border: `1px solid ${c.border}`, borderRadius: 8, padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: c.light, border: `2px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: c.accent, fontWeight: 700 }}>{ch.name.charAt(0)}</div>
+                      <div style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 600 }}>P{i + 1}: {ch.name.split(" ")[0]}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Confirm pick button for local mode */}
+            {isLocalSetup && selectedChampion && (
+              <button onClick={confirmLocalPick} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a", fontSize: 14, padding: "12px 32px", marginBottom: 16 }}>Confirm Player {setupStep + 1}</button>
+            )}
+
+            {/* Game length selector (show when champion selection is done) */}
+            {(gameMode !== "local" || !isLocalSetup) && (
+              <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+                {[
+                  { k: "short", label: "Short", sub: gameMode === "solo" ? "10 VP / 15 turns" : "10 VP" },
+                  { k: "normal", label: "Normal", sub: gameMode === "solo" ? "20 VP / 30 turns" : "20 VP" },
+                  { k: "long", label: "Long", sub: gameMode === "solo" ? "50 VP / 60 turns" : "50 VP" },
+                ].map(o => (
+                  <div key={o.k} onClick={() => setGameLength(o.k)} style={{ padding: "10px 20px", borderRadius: 8, cursor: "pointer", background: gameLength === o.k ? "#e6fff2" : "#fff", border: gameLength === o.k ? "1px solid #00e87b" : "1px solid #e5e5e5", textAlign: "center", transition: "all 0.2s ease" }}>
+                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600 }}>{o.label}</div>
+                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b" }}>{o.sub}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Back + Start buttons */}
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => { setGameMode(null); setSelectedChampion(null); setLocalChampions([]); setSetupStep(0); }} style={{ ...btnStyle, background: "transparent", color: "#6b6b6b", border: "1px solid #e5e5e5", fontSize: 14, padding: "12px 24px" }}>Back</button>
+              {(gameMode !== "local" || !isLocalSetup) && (
+                <button onClick={startGame} disabled={!canStart} style={{ ...btnStyle, background: canStart ? "#00e87b" : "#e5e5e5", color: canStart ? "#0a0a0a" : "#6b6b6b", fontSize: 14, padding: "12px 32px" }}>Start Game</button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     );
   }
 
   if (!game) return null;
 
-  const me = game.players.find(p => p.isHuman);
-  const meIdx = game.players.findIndex(p => p.isHuman);
+  // In local mode, "me" is the current player. In other modes, it's the human player.
+  const me = game.gameMode === "local"
+    ? game.players[game.currentPlayerIdx]
+    : game.players.find(p => p.isHuman);
+  const meIdx = game.gameMode === "local"
+    ? game.currentPlayerIdx
+    : game.players.findIndex(p => p.isHuman);
   const isMyTurn = game.currentPlayerIdx === meIdx;
   const phase = game.phase;
 
+  // Sub-copy per phase
+  const subCopy = {
+    [PH.DRAW]: "Click the deck to draw an action card",
+    [PH.CHALLENGE]: "Click the deck to reveal a challenge",
+    [PH.CHALLENGE_RESOLVE]: "Click the challenge card to resolve its effect",
+    [PH.PLAY]: "Select a card from your hand, then click it again to play",
+    [PH.CLEANUP]: "Click to end your turn",
+  };
+
+  // Handle cleanup with pass screen for local mode
+  function handleCleanup() {
+    let gameOver = false;
+    setGame(prev => {
+      const g = cloneGame(prev);
+      doCleanup(g);
+      if (g.phase === PH.GAME_OVER) gameOver = true;
+      return g;
+    });
+    if (game.gameMode === "local" && !gameOver) {
+      setShowPassScreen(true);
+    }
+  }
+
+  // Game Over Screen
   if (phase === PH.GAME_OVER) {
-    const w = game.winner;
-    const wc = COLORS[w.champion.cls];
+    const isSolo = game.gameMode === "solo";
+    const soloWin = game.soloResult === "win";
+    const sorted = [...game.players].sort((a, b) => b.vp - a.vp);
+
     return (
       <div style={{ minHeight: "100vh", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40 }}>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, letterSpacing: 4, color: "#6b6b6b", marginBottom: 12, fontWeight: 500 }}>GAME OVER</div>
-        <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 48, color: "#0a0a0a", margin: 0, fontWeight: 700 }}>{w.name} Wins!</h1>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: "#6b6b6b", marginTop: 8 }}>{w.vp} VP in {game.round} rounds</div>
-        <div style={{ display: "flex", gap: 12, marginTop: 32 }}>
-          {game.players.sort((a, b) => b.vp - a.vp).map((p, i) => (
-            <div key={i} style={{ background: p === w ? "#e6fff2" : "#f5f5f5", borderRadius: 8, padding: "14px 24px", textAlign: "center", border: p === w ? "1px solid #00e87b" : "1px solid #e5e5e5" }}>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 24, color: "#0a0a0a", fontWeight: 700 }}>{i + 1}</div>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600 }}>{p.name}</div>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b" }}>{p.vp} VP</div>
+        {isSolo ? (
+          <>
+            <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 48, color: soloWin ? "#00e87b" : "#0a0a0a", margin: 0, fontWeight: 700 }}>
+              {soloWin ? "You Win!" : "Out of Turns"}
+            </h1>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: "#6b6b6b", marginTop: 8 }}>
+              {game.players[0].vp} / {game.winVp} VP in {game.turnsUsed} turns
             </div>
-          ))}
-        </div>
-        <button onClick={() => { setScreen("title"); setGame(null); setSelectedChampion(null); setSelectedCard(null); }} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a", marginTop: 32, fontSize: 14, padding: "12px 32px" }}>Play Again</button>
+            <div style={{ background: soloWin ? "#e6fff2" : "#f5f5f5", borderRadius: 8, padding: "20px 32px", textAlign: "center", border: soloWin ? "1px solid #00e87b" : "1px solid #e5e5e5", marginTop: 24 }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600 }}>{game.players[0].name}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 32, color: "#0a0a0a", fontWeight: 700, marginTop: 4 }}>{game.players[0].vp} VP</div>
+            </div>
+          </>
+        ) : (
+          <>
+            <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 48, color: "#0a0a0a", margin: 0, fontWeight: 700 }}>{game.winner.name} Wins!</h1>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: "#6b6b6b", marginTop: 8 }}>{game.winner.vp} VP in {game.round} rounds</div>
+            <div style={{ display: "flex", gap: 12, marginTop: 32, flexWrap: "wrap", justifyContent: "center" }}>
+              {sorted.map((p, i) => (
+                <div key={i} style={{ background: p === game.winner ? "#e6fff2" : "#f5f5f5", borderRadius: 8, padding: "14px 24px", textAlign: "center", border: p === game.winner ? "1px solid #00e87b" : "1px solid #e5e5e5" }}>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 24, color: "#0a0a0a", fontWeight: 700 }}>{i + 1}</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600 }}>{p.name}</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b" }}>{p.vp} VP</div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        <button onClick={() => { setScreen("title"); setGame(null); setSelectedChampion(null); setSelectedCard(null); setGameMode(null); setLocalChampions([]); setSetupStep(0); setShowPassScreen(false); }} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a", marginTop: 32, fontSize: 14, padding: "12px 32px" }}>Play Again</button>
+      </div>
+    );
+  }
+
+  // Pass-and-play interstitial
+  if (showPassScreen && game.gameMode === "local") {
+    const nextPlayer = game.players[game.currentPlayerIdx];
+    const nc = COLORS[nextPlayer.champion.cls];
+    return (
+      <div style={{ minHeight: "100vh", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40, fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, letterSpacing: 4, color: "#6b6b6b", marginBottom: 24, fontWeight: 500 }}>PASS THE DEVICE</div>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", background: nc.light, border: `3px solid ${nc.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: nc.accent, fontWeight: 700, marginBottom: 16 }}>{nextPlayer.name.charAt(0)}</div>
+        <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 36, color: "#0a0a0a", margin: 0, fontWeight: 700, marginBottom: 8 }}>Pass to {nextPlayer.name}</h1>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#6b6b6b", marginBottom: 32 }}>{CLASS_DISPLAY[nextPlayer.champion.cls]} | Round {game.round}</div>
+        <button onClick={() => setShowPassScreen(false)} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a", fontSize: 16, padding: "14px 40px" }}>Ready</button>
       </div>
     );
   }
@@ -520,9 +751,9 @@ export default function VisibilityQuest() {
             <div style={{ fontSize: 14, color: "#6b6b6b", lineHeight: 1.7 }}>
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>Each turn has 3 steps</div>
-                <div style={{ marginBottom: 4, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>1. Draw</span> — Click "Draw Card" to add an action card to your hand</div>
-                <div style={{ marginBottom: 4, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>2. Challenge</span> — Click "Draw Challenge" to reveal a random event, then "Resolve" to apply it</div>
-                <div style={{ paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>3. Play</span> — Click a card in your hand to select it, then click again to play it for VP. Or click "Skip" to pass</div>
+                <div style={{ marginBottom: 4, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>1. Draw</span> — Click the deck to draw an action card</div>
+                <div style={{ marginBottom: 4, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>2. Challenge</span> — Click the deck to reveal a challenge</div>
+                <div style={{ paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>3. Play</span> — Select a card from your hand, then click again to play it for VP</div>
               </div>
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>Action cards</div>
@@ -532,15 +763,17 @@ export default function VisibilityQuest() {
                 <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>Challenge types</div>
                 <div style={{ marginBottom: 4 }}><span style={{ fontWeight: 600, color: "#00e87b" }}>Lucky</span> — Good news. You gain VP or draw extra cards.</div>
                 <div style={{ marginBottom: 4 }}><span style={{ fontWeight: 600, color: "#0a0a0a" }}>Personal</span> — Bad news for you. Lose VP, discard cards, or skip your action.</div>
-                <div><span style={{ fontWeight: 600, color: "#0a0a0a" }}>Global</span> — Affects all 4 players. Sometimes the player in last place gets a break.</div>
+                <div><span style={{ fontWeight: 600, color: "#0a0a0a" }}>Global</span> — Affects all players. Sometimes the player in last place gets a break.</div>
               </div>
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>Champions</div>
-                <div>Each champion has a unique power. Some are passive (always active), others can be used once per round or once per game. Your champion's power is shown when you hover their card.</div>
+                <div>Each champion has a unique power. Some are passive (always active), others can be used once per round or once per game.</div>
               </div>
               <div>
                 <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>Winning</div>
-                <div>First player to reach the VP target wins. You play against 3 AI opponents. The game log in the bottom left tracks everything that happens.</div>
+                <div>
+                  {game.gameMode === "solo" ? "Reach the VP target before you run out of turns." : "First player to reach the VP target wins."}
+                </div>
               </div>
             </div>
           </div>
@@ -552,63 +785,113 @@ export default function VisibilityQuest() {
           <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, color: "#0a0a0a", fontWeight: 700 }}>Visibility Quest</div>
           <button onClick={() => setShowRules(!showRules)} style={{ background: "#f5f5f5", border: "1px solid #e5e5e5", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 14, color: "#6b6b6b", fontWeight: 600 }}>?</button>
         </div>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", textAlign: "center", marginBottom: 8 }}>Round {game.round} | Target: {game.winVp} VP</div>
-        {game.players.map((p, i) => (
-          <PlayerStrip key={i} player={p} isActive={game.currentPlayerIdx === i} isCurrent={p.isHuman} color={p.champion.cls} />
-        ))}
-        <div style={{ flex: 1 }} />
-        <div ref={logRef} style={{ maxHeight: 200, overflowY: "auto", background: "#f5f5f5", borderRadius: 8, padding: 10, border: "1px solid #e5e5e5" }}>
-          {game.log.slice(-15).map((l, i) => (
-            <div key={i} style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#6b6b6b", marginBottom: 3, lineHeight: 1.5 }}>{l}</div>
-          ))}
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", textAlign: "center", marginBottom: 8 }}>
+          {game.gameMode === "solo"
+            ? `Turn ${game.turnsUsed + 1} / ${game.turnLimit} | Target: ${game.winVp} VP`
+            : `Round ${game.round} | Target: ${game.winVp} VP`}
         </div>
+        {game.players.map((p, i) => (
+          <PlayerStrip key={i} player={p} isActive={game.currentPlayerIdx === i} isCurrent={i === meIdx} color={p.champion.cls} />
+        ))}
       </div>
 
       {/* MAIN AREA */}
       <div style={{ flex: 1, padding: 24, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {/* Phase Banner */}
-        <div style={{ background: "#fff", borderRadius: 8, padding: "14px 20px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #e5e5e5" }}>
-          <div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", letterSpacing: 0, fontWeight: 500 }}>
-              {isMyTurn ? "Your turn" : `${game.players[game.currentPlayerIdx].name}'s turn`}
-            </div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, color: "#0a0a0a", fontWeight: 700 }}>
-              {phase === PH.DRAW && "Draw Phase"}
-              {phase === PH.CHALLENGE && "Challenge Phase"}
-              {phase === PH.CHALLENGE_RESOLVE && "Resolve Challenge"}
-              {phase === PH.PLAY && "Action Phase"}
-              {phase === PH.CLEANUP && "End of Turn"}
-            </div>
+        {/* Phase Banner (informational only - no buttons) */}
+        <div style={{ background: "#fff", borderRadius: 8, padding: "14px 20px", marginBottom: 16, border: "1px solid #e5e5e5" }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", letterSpacing: 0, fontWeight: 500 }}>
+            {game.gameMode === "local"
+              ? `${me.name}'s turn`
+              : isMyTurn ? "Your turn" : `${game.players[game.currentPlayerIdx].name}'s turn`}
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {isMyTurn && phase === PH.DRAW && (
-              <button onClick={() => act(g => { doDraw(g); })} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a" }}>Draw Card</button>
-            )}
-            {isMyTurn && phase === PH.CHALLENGE && (
-              <button onClick={() => act(g => { doChallenge(g); })} style={{ ...btnStyle, background: "transparent", color: "#0a0a0a", border: "1px solid #e5e5e5" }}>Draw Challenge</button>
-            )}
-            {isMyTurn && phase === PH.CHALLENGE_RESOLVE && (
-              <button onClick={() => act(g => { resolveChallenge(g); })} style={{ ...btnStyle, background: "transparent", color: "#0a0a0a", border: "1px solid #e5e5e5" }}>Resolve</button>
-            )}
-            {isMyTurn && phase === PH.PLAY && (
-              <button onClick={() => act(g => skipPlay(g))} style={{ ...btnStyle, background: "transparent", color: "#6b6b6b", border: "1px solid #e5e5e5" }}>Skip</button>
-            )}
-            {isMyTurn && phase === PH.CLEANUP && (
-              <button onClick={() => act(g => doCleanup(g))} style={{ ...btnStyle, background: "#00e87b", color: "#0a0a0a" }}>End Turn</button>
-            )}
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, color: "#0a0a0a", fontWeight: 700 }}>
+            {phase === PH.DRAW && "Draw Phase"}
+            {phase === PH.CHALLENGE && "Challenge Phase"}
+            {phase === PH.CHALLENGE_RESOLVE && "Resolve Challenge"}
+            {phase === PH.PLAY && "Action Phase"}
+            {phase === PH.CLEANUP && "End of Turn"}
+          </div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b", marginTop: 4 }}>
+            {subCopy[phase] || ""}
           </div>
         </div>
 
-        {/* Challenge Display */}
+        {/* Clickable Deck Cards (center area) */}
+        {isMyTurn && phase === PH.DRAW && (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: 16, padding: "20px 0" }}>
+            <div onClick={() => act(g => doDraw(g))} style={{ width: 160, height: 210, borderRadius: 12, background: "#fff", border: "2px solid #e5e5e5", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s ease", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"; }}>
+              <div style={{ fontSize: 40, color: "#e5e5e5", marginBottom: 8 }}>?</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600 }}>Action Deck</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#6b6b6b", marginTop: 4 }}>Click to draw</div>
+            </div>
+          </div>
+        )}
+
+        {isMyTurn && phase === PH.CHALLENGE && !game.currentChallenge && (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: 16, padding: "20px 0" }}>
+            <div onClick={() => act(g => doChallenge(g))} style={{ width: 160, height: 210, borderRadius: 12, background: "#fff", border: "2px solid #e5e5e5", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s ease", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"; }}>
+              <div style={{ fontSize: 40, color: "#e5e5e5", marginBottom: 8 }}>!</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600 }}>Challenge Deck</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#6b6b6b", marginTop: 4 }}>Click to reveal</div>
+            </div>
+          </div>
+        )}
+
+        {/* Challenge Display (clickable to resolve) */}
         {game.currentChallenge && (
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-            <ChallengeCard card={game.currentChallenge} />
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16, cursor: isMyTurn && phase === PH.CHALLENGE_RESOLVE ? "pointer" : "default" }}
+            onClick={isMyTurn && phase === PH.CHALLENGE_RESOLVE ? () => act(g => resolveChallenge(g)) : undefined}>
+            <div style={{ transition: "all 0.2s ease" }}
+              onMouseEnter={isMyTurn && phase === PH.CHALLENGE_RESOLVE ? e => { e.currentTarget.style.transform = "translateY(-4px)"; } : undefined}
+              onMouseLeave={isMyTurn && phase === PH.CHALLENGE_RESOLVE ? e => { e.currentTarget.style.transform = "translateY(0)"; } : undefined}>
+              <ChallengeCard card={game.currentChallenge} />
+              {isMyTurn && phase === PH.CHALLENGE_RESOLVE && (
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#00e87b", textAlign: "center", marginTop: 8, fontWeight: 600 }}>Click to resolve</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Cleanup: End Turn card */}
+        {isMyTurn && phase === PH.CLEANUP && (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: 16, padding: "20px 0" }}>
+            <div onClick={handleCleanup} style={{ width: 160, height: 210, borderRadius: 12, background: "#fff", border: "2px solid #00e87b", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s ease", boxShadow: "0 2px 8px rgba(0,232,123,0.1)" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,232,123,0.15)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,232,123,0.1)"; }}>
+              <div style={{ fontSize: 32, color: "#00e87b", marginBottom: 8 }}>&#10003;</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600 }}>End Turn</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#6b6b6b", marginTop: 4 }}>Click to continue</div>
+            </div>
+          </div>
+        )}
+
+        {/* Game Log - "What happened" panel */}
+        {game.log.length > 0 && (
+          <div style={{ background: "#fff", borderRadius: 8, padding: "12px 16px", marginBottom: 16, border: "1px solid #e5e5e5" }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#6b6b6b", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>What happened</div>
+            {game.log.slice(-5).map((l, i, arr) => {
+              const isLatest = i === arr.length - 1;
+              return (
+                <div key={i} style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: isLatest ? "#0a0a0a" : "#6b6b6b", marginBottom: 4, lineHeight: 1.5, paddingLeft: 10, borderLeft: isLatest ? "3px solid #00e87b" : "3px solid transparent", background: isLatest ? "#e6fff2" : "transparent", borderRadius: isLatest ? "0 4px 4px 0" : 0, padding: isLatest ? "4px 8px 4px 10px" : "2px 8px 2px 10px" }}>{l}</div>
+              );
+            })}
           </div>
         )}
 
         {/* Hand */}
         <div style={{ flex: 1, overflowY: "auto" }}>
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b", marginBottom: 10, fontWeight: 500 }}>Your hand ({me.hand.length} cards)</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b", fontWeight: 500 }}>
+              {game.gameMode === "local" ? `${me.name}'s hand` : "Your hand"} ({me.hand.length} cards)
+            </div>
+            {isMyTurn && phase === PH.PLAY && (
+              <span onClick={() => act(g => skipPlay(g))} style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", cursor: "pointer", textDecoration: "underline" }}>Skip</span>
+            )}
+          </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {me.hand.map((card, i) => {
               const canPlay = isMyTurn && phase === PH.PLAY && !me.effects.skipAction && (me.effects.maxPlayable === undefined || card.vp <= me.effects.maxPlayable);
