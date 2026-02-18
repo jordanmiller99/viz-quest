@@ -431,16 +431,15 @@ export default function VisibilityQuest() {
           <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 64, color: "#00e87b", margin: 0, letterSpacing: -1, lineHeight: 1, fontWeight: 700 }}>Quest</h1>
           <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#6b6b6b", marginTop: 16 }}>The Content Marketing Card Game</div>
         </div>
-        <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "24px 32px", marginBottom: 40, maxWidth: 600, width: "100%", border: "1px solid #e5e5e5" }}>
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: "#0a0a0a", fontWeight: 700, marginBottom: 12 }}>How to Play</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px", fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#6b6b6b", lineHeight: 1.6 }}>
-            <div><span style={{ color: "#00e87b", fontWeight: 700 }}>1.</span> Pick a champion with a unique power</div>
-            <div><span style={{ color: "#00e87b", fontWeight: 700 }}>2.</span> Each turn: draw a card, face a challenge, then play an action</div>
-            <div><span style={{ color: "#00e87b", fontWeight: 700 }}>3.</span> Action cards earn VP. Higher value cards earn more</div>
-            <div><span style={{ color: "#00e87b", fontWeight: 700 }}>4.</span> First player to hit the VP target wins!</div>
-          </div>
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#6b6b6b", marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e5e5" }}>
-            <span style={{ fontWeight: 600, color: "#0a0a0a" }}>Tip:</span> Special cards have bonus effects. Challenge cards can help or hurt. Use your champion's power at the right moment.
+        <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "28px 32px", marginBottom: 40, maxWidth: 560, width: "100%", border: "1px solid #e5e5e5" }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: "#0a0a0a", fontWeight: 700, marginBottom: 16 }}>How to Play</div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#6b6b6b", lineHeight: 1.7 }}>
+            <div style={{ marginBottom: 14 }}>You and 3 AI opponents compete to earn <span style={{ fontWeight: 600, color: "#0a0a0a" }}>Victory Points (VP)</span> by playing content marketing action cards. First to reach the target wins.</div>
+            <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 8 }}>Each turn has 3 steps:</div>
+            <div style={{ marginBottom: 6, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>1. Draw</span> — Add an action card to your hand</div>
+            <div style={{ marginBottom: 6, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>2. Challenge</span> — A random event triggers. Lucky ones help you, personal ones hurt you, and global ones affect everyone</div>
+            <div style={{ marginBottom: 14, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>3. Play</span> — Choose a card from your hand to play for VP, or skip</div>
+            <div style={{ paddingTop: 14, borderTop: "1px solid #e5e5e5" }}>Cards are worth <span style={{ fontWeight: 600, color: "#0a0a0a" }}>1, 2, or 3 VP</span>. Some special cards have bonus effects like drawing extra cards or stealing VP from opponents. Click a card once to select it, then click again to play it.</div>
           </div>
         </div>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#0a0a0a", fontWeight: 600, marginBottom: 12 }}>Choose your champion</div>
@@ -518,24 +517,30 @@ export default function VisibilityQuest() {
               <div style={{ fontSize: 18, fontWeight: 700, color: "#0a0a0a" }}>How to Play</div>
               <button onClick={() => setShowRules(false)} style={{ background: "none", border: "none", fontSize: 20, color: "#6b6b6b", cursor: "pointer", padding: 4 }}>x</button>
             </div>
-            <div style={{ fontSize: 14, color: "#6b6b6b", lineHeight: 1.8 }}>
+            <div style={{ fontSize: 14, color: "#6b6b6b", lineHeight: 1.7 }}>
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 4 }}>Turn order</div>
-                <div><span style={{ color: "#00e87b", fontWeight: 700 }}>1.</span> Draw an action card from the deck</div>
-                <div><span style={{ color: "#00e87b", fontWeight: 700 }}>2.</span> Draw and resolve a challenge card</div>
-                <div><span style={{ color: "#00e87b", fontWeight: 700 }}>3.</span> Play one action card from your hand to earn VP</div>
+                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>Each turn has 3 steps</div>
+                <div style={{ marginBottom: 4, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>1. Draw</span> — Click "Draw Card" to add an action card to your hand</div>
+                <div style={{ marginBottom: 4, paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>2. Challenge</span> — Click "Draw Challenge" to reveal a random event, then "Resolve" to apply it</div>
+                <div style={{ paddingLeft: 8 }}><span style={{ color: "#00e87b", fontWeight: 700 }}>3. Play</span> — Click a card in your hand to select it, then click again to play it for VP. Or click "Skip" to pass</div>
               </div>
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 4 }}>Cards</div>
-                <div>Action cards are worth <span style={{ fontWeight: 600 }}>1, 2, or 3 VP</span>. Special cards have bonus effects like drawing extra cards or stealing VP.</div>
+                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>Action cards</div>
+                <div>Cards are worth <span style={{ fontWeight: 600, color: "#0a0a0a" }}>1, 2, or 3 VP</span>. The VP value is shown in the circle on each card. Special cards also have bonus effects (shown in green text) like drawing extra cards, gaining immunity, or stealing VP from opponents.</div>
               </div>
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 4 }}>Challenges</div>
-                <div><span style={{ color: "#00e87b", fontWeight: 600 }}>Lucky</span> challenges help you. <span style={{ fontWeight: 600 }}>Personal</span> challenges hurt you. <span style={{ fontWeight: 600 }}>Global</span> challenges affect all players.</div>
+                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>Challenge types</div>
+                <div style={{ marginBottom: 4 }}><span style={{ fontWeight: 600, color: "#00e87b" }}>Lucky</span> — Good news. You gain VP or draw extra cards.</div>
+                <div style={{ marginBottom: 4 }}><span style={{ fontWeight: 600, color: "#0a0a0a" }}>Personal</span> — Bad news for you. Lose VP, discard cards, or skip your action.</div>
+                <div><span style={{ fontWeight: 600, color: "#0a0a0a" }}>Global</span> — Affects all 4 players. Sometimes the player in last place gets a break.</div>
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>Champions</div>
+                <div>Each champion has a unique power. Some are passive (always active), others can be used once per round or once per game. Your champion's power is shown when you hover their card.</div>
               </div>
               <div>
-                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 4 }}>Winning</div>
-                <div>First player to reach the VP target wins. Use your champion's unique power to get an edge.</div>
+                <div style={{ fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>Winning</div>
+                <div>First player to reach the VP target wins. You play against 3 AI opponents. The game log in the bottom left tracks everything that happens.</div>
               </div>
             </div>
           </div>
